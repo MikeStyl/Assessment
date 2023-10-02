@@ -1,0 +1,75 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1348.v32a_a_f150910e">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2144.v077a_d1928a_40"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2144.v077a_d1928a_40">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.37.3">
+      <projectUrl>https://github.com/MikeStyl/Job-Project.git/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.3">
+          <spec></spec>
+        </com.cloudbees.jenkins.GitHubPushTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3793.v65dec41c3a_c3">
+    <script>pipeline {
+  environment {
+    registry = &quot;michalisst/hello_world&quot;
+    dockerImage = &apos;&apos;
+  }
+  agent any
+  stages {
+    stage(&apos;Checkout&apos;) {
+        steps {
+            checkout scmGit(branches: [[name: &apos;**&apos;]], extensions: [], userRemoteConfigs: [[url: &apos;https://github.com/MikeStyl/Job-Project.git&apos;]])
+        }
+    }
+    
+    stage(&apos;Initialize&apos;){
+        steps{
+            script{
+                def dockerHome = tool &apos;Docker&apos;
+                env.PATH = &quot;${dockerHome}/bin:${env.PATH}&quot;
+                
+            }
+        }
+    }    
+    
+    
+    
+    stage(&apos;Building image&apos;) {
+      steps{
+        script {
+          dockerImage = docker.build registry + &quot;:$BUILD_NUMBER&quot;
+        }
+      }
+    }
+    stage(&apos;Deploy Image&apos;) {
+      steps{
+        script {
+          docker.withRegistry( &apos;&apos;, &apos;Docker_hub&apos; ) {
+            dockerImage.push()
+          }
+        }
+      }
+    }
+  }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
